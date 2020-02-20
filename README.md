@@ -25,17 +25,17 @@ printf() via USART2 at PA2 (115200, 8 data bit, 1 start bit, 1 stop bit, no pari
 ```
 int main(void)
 {
-    profiler_start("math.h");
+    App_SharedProfiler_Start("math.h");
 
-    profiler_event("sinf() start");
+    App_SharedProfiler_Event("sinf() start");
     sinf(1.45f);
-    profiler_event("sinf() end");
+    App_SharedProfiler_Event("sinf() end");
 
-    profiler_event("tanf() start");
+    App_SharedProfiler_Event("tanf() start");
     tanf(1.0f);
-    profiler_event("tanf() end");
+    App_SharedProfiler_Event("tanf() end");
 
-    profiler_stop();
+    App_SharedProfiler_Stop();
 
     while (1) {
     }

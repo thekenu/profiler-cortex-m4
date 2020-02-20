@@ -1,5 +1,5 @@
 //-- Includes ------------------------------------------------------------------
-#include "profiler.h"
+#include "SharedProfiler.h"
 
 //-- Private functions prototypes ----------------------------------------------
 static __INLINE void dwt_init(void);
@@ -11,11 +11,11 @@ extern uint32_t SystemCoreClock;
 
 static struct
 {
-    const char* name;
-    uint32_t start_time;
-    uint32_t event_time[PROFILER_EVENTS_MAX];
-    const char* event_name[PROFILER_EVENTS_MAX];
-    uint32_t event_count;
+    const char *name;
+    uint32_t    start_time;
+    uint32_t    event_time[PROFILER_EVENTS_MAX];
+    const char *event_name[PROFILER_EVENTS_MAX];
+    uint32_t    event_count;
 } profiler;
 
 //-- Private functions ---------------------------------------------------------
@@ -39,9 +39,9 @@ static __INLINE uint32_t dwt_get_counter()
 }
 
 //-- Exported functions --------------------------------------------------------
-void profiler_start(const char* name)
+void App_SharedProfiler_Start(const char *name)
 {
-    profiler.name = name;
+    profiler.name        = name;
     profiler.event_count = 0;
 
     dwt_init();
@@ -49,16 +49,18 @@ void profiler_start(const char* name)
     profiler.start_time = dwt_get_counter();
 }
 
-void profiler_event(const char* event)
+void App_SharedProfiler_Event(const char *event)
 {
-    if (profiler.event_count < PROFILER_EVENTS_MAX) {
+    if (profiler.event_count < PROFILER_EVENTS_MAX)
+    {
         profiler.event_time[profiler.event_count] = dwt_get_counter();
         profiler.event_name[profiler.event_count] = event;
         profiler.event_count++;
     }
 }
 
-void profiler_stop(void)
+// clang-format off
+void App_SharedProfiler_Stop(void)
 {
     uint32_t ticks_per_1us;
     uint32_t prev_time_us;
@@ -70,23 +72,26 @@ void profiler_stop(void)
 
     ticks_per_1us = SystemCoreClock / 1000000;
 
-    printf("Profiling \"%s\" sequence:\n"
-           "--Event-----------------------|-timestamp_us-|----delta_us---|-timestamp_ticks-|----delta_ticks---|" PROFILER_ENDL,
-           profiler.name);
-    prev_time_us = 0;
+    SharedLogging_Printf("Profiling \"%s\" sequence:\n"
+                         "--Event-----------------------|-timestamp_us-|----delta_us---|-timestamp_ticks-|----delta_ticks---|" PROFILER_ENDL,
+                         profiler.name);
+
+    prev_time_us    = 0;
     prev_time_ticks = 0;
 
-    for (uint32_t i = 0; i < profiler.event_count; i++) {
+    for (uint32_t i = 0; i < profiler.event_count; i++)
+    {
         timestamp_ticks = profiler.event_time[i] - profiler.start_time;
-        timestamp_us = timestamp_ticks / ticks_per_1us;
-        delta_us = timestamp_us - prev_time_us;
-        delta_ticks = timestamp_ticks - prev_time_ticks;
-        prev_time_us = timestamp_us;
+        timestamp_us    = timestamp_ticks / ticks_per_1us;
+        delta_us        = timestamp_us - prev_time_us;
+        delta_ticks     = timestamp_ticks - prev_time_ticks;
+        prev_time_us    = timestamp_us;
         prev_time_ticks = timestamp_ticks;
-        printf("%-30s: %9d us | +%9d us | %9d ticks | +%9d ticks |" PROFILER_ENDL,
-               profiler.event_name[i], (int)timestamp_us, (int)delta_us, (int)timestamp_ticks, (int)delta_ticks);
+        SharedLogging_Printf("%-30s: %9d us | +%9d us | %9d ticks | +%9d ticks |" PROFILER_ENDL,
+            profiler.event_name[i], (int)timestamp_us, (int)delta_us,
+            (int)timestamp_ticks, (int)delta_ticks);
     }
-    printf(PROFILER_ENDL);
+    SharedLogging_Printf(PROFILER_ENDL);
     profiler.event_count = 0;
     dwt_deinit();
 }
